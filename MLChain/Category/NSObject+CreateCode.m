@@ -12,6 +12,15 @@
 #import <UIKit/UIKit.h>
 #import "NSObject+ChainInfoAdaptor.h"
 @implementation MLCCreateCodeModel
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.shouldImportSelfClass = YES;
+        self.shouldImportSuperClass = YES;
+    }
+    return self;
+}
 + (instancetype)modelWithClassName:(NSString *)className
                     superclassName:(NSString *)superclassName
               hFileImportFileNames:(NSArray *)hFileImportFileNames
@@ -71,7 +80,8 @@
 {
     NSMutableArray *importFileNames = [[NSMutableArray alloc] init];
     
-    if (![self.hFileImportFileNames containsObject:self.superclassName] && self.superclassName) {
+    if (self.shouldImportSuperClass
+        && ![self.hFileImportFileNames containsObject:self.superclassName] && self.superclassName) {
         if (MLCIsSystemClass(NSClassFromString(self.superclassName))) {
             [importFileNames addObject:[NSString stringWithFormat:@"#import \"%@.h\"", self.superclassName]];
         }
@@ -104,13 +114,18 @@
 {
     
     NSMutableArray *importFileNames = [[NSMutableArray alloc] init];
-    if (![self.mFileImportFileNames containsObject:self.className]) {
-        if (MLCIsSystemClass(NSClassFromString(self.className))) {
-            [importFileNames addObject:[NSString stringWithFormat:@"#import \"%@.h\"", self.className]];
+  
+        if (self.shouldImportSelfClass
+            && ![self.mFileImportFileNames containsObject:self.className]) {
+            if (MLCIsSystemClass(NSClassFromString(self.className))) {
+                [importFileNames addObject:[NSString stringWithFormat:@"#import \"%@.h\"", self.className]];
+            }
+            
         }
-        
-    }
-    if (![self.mFileImportFileNames containsObject:self.superclassName] && self.superclassName) {
+    
+   
+    if (self.shouldImportSuperClass
+        && ![self.mFileImportFileNames containsObject:self.superclassName] && self.superclassName) {
         if (MLCIsSystemClass(NSClassFromString(self.superclassName))) {
             [importFileNames addObject:[NSString stringWithFormat:@"#import \"%@.h\"", self.superclassName]];
         }
@@ -151,25 +166,25 @@
 {
     
     NSString *resultString = [NSString stringWithFormat:@"%@\n%@\n%@\n%@\n%@\n%@\n%@\n%@\n",
-                              self.hFileTopString,
-                              self.hFileImportString,
-                              self.classDeclearString,
-                              self.typedefString,
+                              self.hFileTopString ? : @"",
+                              self.hFileImportString ? : @"",
+                              self.classDeclearString ? : @"",
+                              self.typedefString ? : @"",
                               self.protocolName ? self.protocolResultString: @"",
                               self.hFileInterfaceString ? : @"",
-                              self.hFileContentString,
+                              self.hFileContentString ? : @"",
                               self.hFileInterfaceString ? self.endString : @""];
     return resultString;
 }
 - (NSString *)mFileResultString
 {
     NSString *resultString = [NSString stringWithFormat:@"%@\n%@\n%@\n%@\n%@\n%@\n%@\n",
-                              self.mFileTopString,
+                              self.mFileTopString ? : @"",
                               self.mFileStringBeforeImplementation ? : @"",
-                              self.mFileImportString,
-                              self.mFileImplementationString,
-                              self.mFileContentString,
-                              self.endString,
+                              self.mFileImportString ? : @"",
+                              self.mFileImplementationString ? : @"",
+                              self.mFileContentString ? : @"",
+                              self.endString ? : @"",
                               self.mFileStringAfterEnd ? : @""];
     return resultString;
 }
@@ -208,7 +223,7 @@ NSString *const kML_CreateCodeFileType_m = @"m";
     
     if (isOutPutToDeskTop) {
         NSString *XcodeCreateCodeDirectory = [[NSFileManager macDeskTopDiretory]  stringByAppendingPathComponent:DESK_TOP_DIR];
-        [[NSFileManager defaultManager] writefileString:viewString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:NSStringFromClass(aClass) fileType:@"txt" moveToTrashWhenFileExists:YES];
+        [[NSFileManager defaultManager] writefileString:viewString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:NSStringFromClass(aClass) fileType:@"txt" operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
     }
     
     
@@ -227,7 +242,7 @@ NSString *const kML_CreateCodeFileType_m = @"m";
     
     
     NSString *XcodeCreateCodeDirectory = [[NSFileManager macDeskTopDiretory]  stringByAppendingPathComponent:DESK_TOP_DIR];
-    [[NSFileManager defaultManager] writefileString:resultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:NSStringFromClass(aClass) fileType:fileType moveToTrashWhenFileExists:YES];
+    [[NSFileManager defaultManager] writefileString:resultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:NSStringFromClass(aClass) fileType:fileType operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
     return resultString;
 }
 
@@ -442,7 +457,7 @@ NSString *const kML_CreateCodeFileType_m = @"m";
     if (isOutPutToDeskTop) {
         
         NSString *XcodeCreateCodeDirectory = [[NSFileManager macDeskTopDiretory] stringByAppendingPathComponent:DESK_TOP_DIR];
-        [[NSFileManager defaultManager] writefileString:initHelperString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:NSStringFromClass(aClass) fileType:@"txt" moveToTrashWhenFileExists:YES];
+        [[NSFileManager defaultManager] writefileString:initHelperString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:NSStringFromClass(aClass) fileType:@"txt" operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
     }
     return initHelperString;
 }

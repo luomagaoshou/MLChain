@@ -14,6 +14,11 @@
 #import <CoreFoundation/CoreFoundation.h>
 #import "NSObject+ChainInfoAdaptor.h"
 #import "NSObject+RunTimeHelper.h"
+typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
+    MLChainFileSaveTypeToDestop,
+    MLChainFileSaveTypeToPods,
+    
+};
 @interface MLChainStructModel:NSObject
 @property (nonatomic, copy) NSString *structName;
 @property (nonatomic, copy) NSString *encodeTypeString;
@@ -79,22 +84,25 @@
 
 @implementation NSObject (ChainFileCreater)
 
-+ (void)mlc_chainCreateChainFileWithClassNames:(NSArray *)classNames
++ (void)mlc_chainCreateChainFileToDesktopWithClassNames:(NSArray *)classNames
 {
-    [self mlc_chainCreateChainFileWithClassNames:classNames superClassTogether:YES];
+    [self mlc_chainCreateChainFileWithClassNames:classNames superClassTogether:YES saveType:MLChainFileSaveTypeToDestop];
     
     
 }
++ (void)mlc_chainCreateChainFileToPodsWithClassNames:(NSArray *)classNames {
+    [self mlc_chainCreateChainFileWithClassNames:classNames superClassTogether:YES saveType:MLChainFileSaveTypeToPods];
+}
 
-+ (void)mlc_chainCreateChainFileWithClassNames:(NSArray *)classNames superClassTogether:(BOOL)superClassTogether{
++ (void)mlc_chainCreateChainFileWithClassNames:(NSArray *)classNames superClassTogether:(BOOL)superClassTogether saveType:(MLChainFileSaveType)saveType {
     
-    classNames = [self mlc_classNamesToStringWithClassNames:classNames uperClassTogether:superClassTogether];
+    classNames = [self mlc_classNamesToStringWithClassNames:classNames superClassTogether:superClassTogether];
     
-    [self mlc_createChainFileOfChainMakerWithClassNames:classNames];
+    [self mlc_createChainFileOfChainMakerWithClassNames:classNames saveType:saveType];
     
-    [self mlc_createChainFileOfCategoryWithClassNames:classNames];
+    [self mlc_createChainFileOfCategoryWithClassNames:classNames saveType:saveType];
     
-    [self mlc_createChainFileOfMLChainHeaderFileWithClassNames:classNames];
+    [self mlc_createChainFileOfMLChainHeaderFileWithClassNames:classNames saveType:saveType];
 }
 
 
@@ -417,8 +425,13 @@
 }
 
 
-+ (void)mlc_createChainFileOfChainMakerWithClassNames:(NSArray *)classNames
-{
+/**
+ 生成链式中间类的文件
+
+ @param classNames <#classNames description#>
+ @param saveType <#saveType description#>
+ */
++ (void)mlc_createChainFileOfChainMakerWithClassNames:(NSArray *)classNames saveType:(MLChainFileSaveType)saveType {
     for (NSString *className in classNames) {
         
         NSString *hfileContentString = [self mlc_hFileContentStrWithClassName:className];
@@ -454,15 +467,35 @@
                                         modelOfSelf.mFileStringAfterEnd = @"#pragma clang diagnostic pop";
                                     }];
         
-        [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:chainClassName fileType:kML_CreateCodeFileType_h moveToTrashWhenFileExists:YES];
         
-        [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:chainClassName fileType:kML_CreateCodeFileType_m moveToTrashWhenFileExists:YES];
+        if (saveType == MLChainFileSaveTypeToPods) {
+            model.shouldImportSelfClass = NO;
+            model.shouldImportSuperClass = NO;
+            model.mFileImportFileNames = nil;
+
+            [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeFileByAppending];
+            
+         
+            model.mFileImportFileNames = @[@"MLChainContainer"];
+            [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m operationType:MLFileOperationTypeFileByAppending];
+        } else if (saveType == MLChainFileSaveTypeToDestop) {
+            [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:chainClassName fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
+            
+            [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:chainClassName fileType:kML_CreateCodeFileType_m operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
+        }
+       
     }
     
     
 }
-+ (void)mlc_createChainFileOfCategoryWithClassNames:(NSArray *)classNames
-{
+
+/**
+ 生成链式方法分类
+
+ @param classNames <#classNames description#>
+ @param saveType <#saveType description#>
+ */
++ (void)mlc_createChainFileOfCategoryWithClassNames:(NSArray *)classNames saveType:(MLChainFileSaveType)saveType {
     //category
     for (NSString *className in classNames) {
         
@@ -474,9 +507,10 @@
         
         
         NSString *chainSuperClassName = MLCSuperClassNameOfClassName(className);
-        NSArray *hfileImportFileNames = @[[NSString stringWithFormat:@"MLChain4%@", className]];
         
+        NSArray *hfileImportFileNames = @[[NSString stringWithFormat:@"MLChain4%@", className]];
         NSArray *mFileImportFileNames = @[[className stringByAppendingString:@"+MLChain"], @"NSObject+MLChain"];
+        
         MLCCreateCodeModel *model =
         [MLCCreateCodeModel modelWithClassName:className
                                 superclassName:chainSuperClassName
@@ -487,28 +521,49 @@
                                     moreConfig:^(MLCCreateCodeModel *modelOfSelf) {
                                         modelOfSelf.categoryName = @"MLChain";
                                     }];
+        if (saveType == MLChainFileSaveTypeToPods) {
+            model.shouldImportSelfClass = NO;
+            model.shouldImportSuperClass = NO;
+            model.hFileImportFileNames = nil;
+            model.mFileImportFileNames = nil;
+            [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeFileByAppending];
+            
+            [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m operationType:MLFileOperationTypeFileByAppending];
+        } else if (saveType == MLChainFileSaveTypeToDestop) {
+            
+        [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:model.fileName fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
         
-        [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:model.fileName fileType:kML_CreateCodeFileType_h moveToTrashWhenFileExists:YES];
-        
-        [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:model.fileName  fileType:kML_CreateCodeFileType_m moveToTrashWhenFileExists:YES];
+        [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:model.fileName  fileType:kML_CreateCodeFileType_m operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
+        }
     }
     
     
 }
 
-+ (void)mlc_createChainFileOfMLChainHeaderFileWithClassNames:(NSArray *)classNames
-{
+/**
+ 生成链式方法的的头文件
+
+ @param classNames <#classNames description#>
+ @param saveType <#saveType description#>
+ */
++ (void)mlc_createChainFileOfMLChainHeaderFileWithClassNames:(NSArray *)classNames saveType:(MLChainFileSaveType)saveType {
     //MLChain.h 头文件
-    
+    if (saveType == MLChainFileSaveTypeToPods) {
+        return;
+    }
     NSString *XcodeCreateCodeDirectory = [[NSFileManager macDeskTopDiretory] stringByAppendingPathComponent:@"MLChain"];
     
     
     NSMutableArray *hFileImportFileNames = [[NSMutableArray alloc] init];
     
-    for (NSString *className in classNames) {
-        [hFileImportFileNames addObject:[NSString stringWithFormat:@"MLChain4%@", className]];
-        [hFileImportFileNames addObject:[NSString stringWithFormat:@"%@+MLChain", className]];
-    }
+    
+
+        for (NSString *className in classNames) {
+            [hFileImportFileNames addObject:[NSString stringWithFormat:@"MLChain4%@", className]];
+            [hFileImportFileNames addObject:[NSString stringWithFormat:@"%@+MLChain", className]];
+        }
+    
+    
     
     
     
@@ -523,29 +578,43 @@
                                     
                                 }];
     
+    
+   
     NSString *hFileString =
     [NSString stringWithFormat:
      @"%@\n#ifndef ML_Chain_h\
      \n#define ML_Chain_h\
      \n%@\
      \n#endif", model.hFileTopString, model.hFileImportString];
-    [[NSFileManager defaultManager] writefileString:hFileString
-                                 ToFileWithDiretory:XcodeCreateCodeDirectory
-                                           fileName:@"MLChain"
-                                           fileType:kML_CreateCodeFileType_h
-                          moveToTrashWhenFileExists:YES];
+    
+    
+
+    if (saveType == MLChainFileSaveTypeToPods) {
+        
+        [[NSFileManager defaultManager] writefileString:hFileString
+                                     ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory]
+                                               fileName:@"MLChain"
+                                               fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeFileByAppending];
+    } else if (saveType == MLChainFileSaveTypeToDestop) {
+        [[NSFileManager defaultManager] writefileString:hFileString
+                                     ToFileWithDiretory:XcodeCreateCodeDirectory
+                                               fileName:@"MLChain"
+                                               fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
+    }
+    
+
     
 }
 
 
 /**
- 要生成的类的类名
+ 要生成的类的类名，根据给定类
  
  @param classNames <#classNames description#>
  @param superClassTogether <#superClassTogether description#>
  @return <#return value description#>
  */
-+ (NSArray *)mlc_classNamesToStringWithClassNames:(NSArray *)classNames uperClassTogether:(BOOL)superClassTogether
++ (NSArray *)mlc_classNamesToStringWithClassNames:(NSArray *)classNames superClassTogether:(BOOL)superClassTogether
 {
     NSMutableSet *mutClassSet = [[NSMutableSet alloc] init];
     for (id obj in classNames) {
@@ -571,10 +640,10 @@
         
         
     }
-    NSMutableArray *mutArr = [[NSMutableArray alloc] init];
-    for (id obj in mutClassSet) {
-        [mutArr addObject:obj];
-    }
+    NSMutableArray *mutArr = [[NSMutableArray alloc] initWithArray:mutClassSet.allObjects];
+    [mutArr sortUsingComparator:^NSComparisonResult(NSString * className1, NSString * className2) {
+        return [NSClassFromString(className1) isSubclassOfClass:NSClassFromString(className2)];
+    }];
     return mutArr;
 }
 #pragma mark - File Content Helper
@@ -636,4 +705,14 @@
     return [resultStrs componentsJoinedByString:@"\n"];
     
 }
+#pragma mark - 
++ (NSString *)mlc_destinedChainFileContainerDiretory {
+    static NSString *chainFileContainer = nil;;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+         chainFileContainer = [[NSBundle mainBundle].infoDictionary[@"ProjectDiretory"] stringByAppendingString:@"/Pods/MLChain/MLChain/"];
+    });
+    return chainFileContainer;
+}
+
 @end

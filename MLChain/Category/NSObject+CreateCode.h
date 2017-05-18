@@ -10,13 +10,13 @@
 @interface MLCCreateCodeModel:NSObject
 @property (nonatomic, copy) NSString *className;//
 @property (nonatomic, copy) NSString *superclassName;//
-@property (nonatomic, copy, readonly) NSString *endString;
+- (NSString *)endString;
 //h文件
-@property (nonatomic, copy, readonly) NSString *hFileTopString;
+- (NSString *)hFileTopString;
 //添加除自身类及父类的头文件名
 @property (nonatomic, copy) NSArray *hFileImportFileNames;//
-@property (nonatomic, copy, readonly) NSString *hFileImportString;
-@property (nonatomic, copy, readonly) NSString *hFileInterfaceString;
+- (NSString *)hFileImportString;
+- (NSString *)hFileInterfaceString;
 @property (nonatomic, copy) NSString *hFileContentString;//
 
 //protocol
@@ -27,29 +27,29 @@
 
 
 //m文件
-@property (nonatomic, copy, readonly) NSString *mFileTopString;
+- (NSString *)mFileTopString;
 //添加除自身类及父类的头文件名
 @property (nonatomic, copy) NSArray *mFileImportFileNames;//
 @property (nonatomic, copy) NSString *mFileStringBeforeImplementation;
 @property (nonatomic, copy) NSString *mFileStringAfterEnd;
-@property (nonatomic, copy, readonly) NSString *mFileImportString;
-@property (nonatomic, copy, readonly) NSString *mFileImplementationString;
+- (NSString *)mFileImportString;
+- (NSString *)mFileImplementationString;
 
 @property (nonatomic, copy) NSString *mFileContentString;//
 
 //结果
-@property (nonatomic, copy, readonly) NSString *protocolResultString;
-@property (nonatomic, copy, readonly) NSString *hFileResultString;
-@property (nonatomic, copy, readonly) NSString *mFileResultString;
+- (NSString *)protocolResultString;
+- (NSString *)hFileResultString;
+- (NSString *)mFileResultString;
 
-
-@property (nonatomic, copy, readonly) NSString *fileName;
+- (NSString *)fileName;
 @property (nonatomic, copy) NSString *typedefString;
 @property (nonatomic, copy) NSString *classDeclearString;
 
-
-//更多设置
 @property (nonatomic, copy) NSString *categoryName;
+
+@property (nonatomic, assign) BOOL shouldImportSelfClass;
+@property (nonatomic, assign) BOOL shouldImportSuperClass;
 + (instancetype)modelWithClassName:(NSString *)className
                     superclassName:(NSString *)superclassName
               hFileImportFileNames:(NSArray *)hFileImportFileNames

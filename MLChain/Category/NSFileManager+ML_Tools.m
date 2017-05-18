@@ -36,7 +36,7 @@
      ToFileWithDiretory:(NSString *)diretory
                fileName:(NSString *)fileName
                fileType:(NSString *)fileType
-moveToTrashWhenFileExists:(BOOL)isMove
+          operationType:(MLFileOperationType)operationType
 {
     NSString *filePath;
     if ([diretory hasSuffix:@"/"]) {
@@ -60,31 +60,36 @@ moveToTrashWhenFileExists:(BOOL)isMove
     }
     
     if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
-        if (isMove) {
+        if (operationType == MLFileOperationTypeMoveToTrashWhenFileExists
+            || operationType == MLFileOperationTypeFileByAppending) {
             NSString *macTrashDiretory = [NSFileManager macTrashDiretory];
-            NSTimeZone* timeZone = [NSTimeZone timeZoneWithName:@"Asia/Shanghai"];
-            NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
-            [formatter setTimeZone:timeZone];
-            [formatter setDateStyle:NSDateFormatterMediumStyle];
-            [formatter setTimeStyle:NSDateFormatterShortStyle];
-            [formatter setDateFormat:@"yyyy-MM-dd HH:MM:ss"];
-            NSString *dateStr = [formatter stringFromDate:[NSDate date]];
-            NSString *targetPath = [macTrashDiretory stringByAppendingFormat:@"/%@%@.%@", fileName, dateStr, fileType];
-           
-         BOOL res =[[NSFileManager defaultManager] moveItemAtPath:filePath toPath:targetPath error:nil];
-      
-          
-            if (res) {
-                NSLog(@"%@", [NSString stringWithFormat:@"%@.%@ 已移到废纸篓", fileName, fileType]);
-                
-                BOOL res = [fileString writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
-                if (res) {
-                    NSLog(@"%@", [NSString stringWithFormat:@"%@.%@ 生成成功\n路径:\n%@", fileName, fileType, filePath]);
-                    return res;
-                }
-                
-            }
+        
+            NSString *dateStr = [self _ml_currentTimerSting];
             
+            if (operationType == MLFileOperationTypeMoveToTrashWhenFileExists) {
+                NSString *targetPath = [macTrashDiretory stringByAppendingFormat:@"/%@%@.%@", fileName, dateStr, fileType];
+                BOOL res =[[NSFileManager defaultManager] moveItemAtPath:filePath toPath:targetPath error:nil];
+                
+                
+                if (res) {
+                    NSLog(@"%@", [NSString stringWithFormat:@"%@.%@ 已移到废纸篓", fileName, fileType]);
+                    
+                    BOOL res = [fileString writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+                    if (res) {
+                        NSLog(@"%@", [NSString stringWithFormat:@"%@.%@ 生成成功\n路径:\n%@", fileName, fileType, filePath]);
+                        return res;
+                    }
+                    
+                }
+            } else if (operationType == MLFileOperationTypeFileByAppending) {
+                NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingAtPath:filePath];
+                [fileHandle seekToEndOfFile];
+                NSData *buffer = [fileString dataUsingEncoding:NSUTF8StringEncoding];
+                [fileHandle writeData:buffer];
+                [fileHandle closeFile];
+            }
+           
+         
         }
         else
         {
@@ -105,4 +110,15 @@ moveToTrashWhenFileExists:(BOOL)isMove
     return NO;
 }
 
+
+- (NSString *)_ml_currentTimerSting {
+    NSTimeZone* timeZone = [NSTimeZone timeZoneWithName:@"Asia/Shanghai"];
+    NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
+    [formatter setTimeZone:timeZone];
+    [formatter setDateStyle:NSDateFormatterMediumStyle];
+    [formatter setTimeStyle:NSDateFormatterShortStyle];
+    [formatter setDateFormat:@"yyyy-MM-dd HH:MM:ss"];
+    NSString *dateStr = [formatter stringFromDate:[NSDate date]];
+    return dateStr;
+}
 @end
