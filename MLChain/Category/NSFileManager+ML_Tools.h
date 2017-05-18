@@ -7,10 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-typedef NS_ENUM(NSUInteger, MLFileOperationType) {
-    MLFileOperationTypeMoveToTrashWhenFileExists,///<当文件存在时删除原文件并生成新文件 否则直接生成新文件
-    MLFileOperationTypeNoOporationWhenFileExists,///当文件存在时不操作
-    MLFileOperationTypeFileByAppending,///<当文件存在时在原文件结尾添加内容，否则直接生成新文件
+typedef NS_OPTIONS(NSUInteger, MLFileOperationType) {
+    MLFileOperationTypeMoveToTrashWhenFileExists = 1,///<当文件存在时删除原文件并生成新文件 否则直接生成新文件
+    MLFileOperationTypeNoOporationWhenFileExists = 1 << 1,///当文件存在时不操作
+    MLFileOperationTypeFileByAppending = 1 << 2,///<当文件存在时在原文件结尾添加内容，否则直接生成新文件
 };
 @interface NSFileManager (ML_Tools)
 

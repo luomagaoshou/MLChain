@@ -93,6 +93,7 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
 + (void)mlc_chainCreateChainFileToPodsWithClassNames:(NSArray *)classNames {
     NSAssert(TARGET_IPHONE_SIMULATOR, @"在模拟器下才能使用该方法");
     [self mlc_clearChainFileContainerContent];
+    [self mlc_clearBackupDesktopChainFileContainerContent];
     [self mlc_chainCreateChainFileWithClassNames:classNames superClassTogether:YES saveType:MLChainFileSaveTypeToPods];
 }
 
@@ -480,6 +481,15 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
          
             model.mFileImportFileNames = @[@"MLChainContainer"];
             [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m operationType:MLFileOperationTypeFileByAppending];
+            
+            //桌面生成一份备份
+            
+            [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeFileByAppending];
+            
+      
+            model.mFileImportFileNames = @[@"MLChainContainer"];
+            [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory  fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m operationType:MLFileOperationTypeFileByAppending];
+            
         } else if (saveType == MLChainFileSaveTypeToDestop) {
             [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:chainClassName fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
             
@@ -531,6 +541,10 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
             [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeFileByAppending];
             
             [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m operationType:MLFileOperationTypeFileByAppending];
+            //桌面生成一份备份
+            [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeFileByAppending];
+            
+            [[NSFileManager defaultManager] writefileString:model.mFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m operationType:MLFileOperationTypeFileByAppending];
         } else if (saveType == MLChainFileSaveTypeToDestop) {
             
         [[NSFileManager defaultManager] writefileString:model.hFileResultString ToFileWithDiretory:XcodeCreateCodeDirectory fileName:model.fileName fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
@@ -589,20 +603,12 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
      \n%@\
      \n#endif", model.hFileTopString, model.hFileImportString];
     
-    
 
-    if (saveType == MLChainFileSaveTypeToPods) {
-        
-        [[NSFileManager defaultManager] writefileString:hFileString
-                                     ToFileWithDiretory:[self mlc_destinedChainFileContainerDiretory]
-                                               fileName:@"MLChain"
-                                               fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeFileByAppending];
-    } else if (saveType == MLChainFileSaveTypeToDestop) {
         [[NSFileManager defaultManager] writefileString:hFileString
                                      ToFileWithDiretory:XcodeCreateCodeDirectory
                                                fileName:@"MLChain"
                                                fileType:kML_CreateCodeFileType_h operationType:MLFileOperationTypeMoveToTrashWhenFileExists];
-    }
+
     
 
     
@@ -715,6 +721,11 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
 + (void)mlc_clearChainFileContainerContent {
     [[NSFileManager defaultManager] clearFileContenWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h];
      [[NSFileManager defaultManager] clearFileContenWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m];
+}
++ (void)mlc_clearBackupDesktopChainFileContainerContent {
+    NSString *XcodeCreateCodeDirectory = [[NSFileManager macDeskTopDiretory] stringByAppendingPathComponent:@"MLChain"];
+    [[NSFileManager defaultManager] clearFileContenWithDiretory:XcodeCreateCodeDirectory fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h];
+    [[NSFileManager defaultManager] clearFileContenWithDiretory:XcodeCreateCodeDirectory  fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m];
 }
 + (NSString *)mlc_destinedChainFileContainerDiretory {
 
