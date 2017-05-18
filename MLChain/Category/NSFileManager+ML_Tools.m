@@ -38,13 +38,7 @@
                fileType:(NSString *)fileType
           operationType:(MLFileOperationType)operationType
 {
-    NSString *filePath;
-    if ([diretory hasSuffix:@"/"]) {
-        filePath  = [diretory stringByAppendingFormat:@"%@.%@",fileName, fileType];
-    } else {
-        filePath = [diretory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@",fileName, fileType]];
-    }
-    
+    NSString *filePath = [NSFileManager ml_filePathWithDiretory:diretory fileName:fileName fileType:fileType];
     if (![[NSFileManager defaultManager] fileExistsAtPath:diretory]) {
        BOOL res = [[NSFileManager defaultManager] createDirectoryAtPath:diretory withIntermediateDirectories:YES attributes:nil error:nil];
         if (res) {
@@ -60,15 +54,10 @@
     if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
         if (operationType == MLFileOperationTypeMoveToTrashWhenFileExists
             || operationType == MLFileOperationTypeFileByAppending) {
-            NSString *macTrashDiretory = [NSFileManager macTrashDiretory];
-        
-            NSString *dateStr = [self _ml_currentTimerSting];
+
             
             if (operationType == MLFileOperationTypeMoveToTrashWhenFileExists) {
-                NSString *targetPath = [macTrashDiretory stringByAppendingFormat:@"/%@%@.%@", fileName, dateStr, fileType];
-                BOOL res =[[NSFileManager defaultManager] moveItemAtPath:filePath toPath:targetPath error:nil];
-                
-                
+              BOOL res = [self deleteFileWithDiretory:diretory fileName:fileName fileType:fileType];
                 if (res) {
                     NSLog(@"%@", [NSString stringWithFormat:@"%@.%@ 已移到废纸篓", fileName, fileType]);
                     
@@ -79,6 +68,7 @@
                     }
                     
                 }
+              
             } else if (operationType == MLFileOperationTypeFileByAppending) {
                 NSFileHandle *fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:filePath];
                 [fileHandle seekToEndOfFile];
@@ -108,7 +98,7 @@
     return NO;
 }
 
-- (void)clearFileContenWithDiretory:(NSString *)diretory
+- (void)clearFileContentWithDiretory:(NSString *)diretory
                             fileName:(NSString *)fileName
                             fileType:(NSString *)fileType {
     NSString *filePath;
@@ -120,6 +110,25 @@
     [@"" writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
 
+}
+- (BOOL)deleteFileWithDiretory:(NSString *)diretory fileName:(NSString *)fileName fileType:(NSString *)fileType {
+    NSString *macTrashDiretory = [NSFileManager macTrashDiretory];
+               NSString *dateStr = [self _ml_currentTimerSting];
+    NSString *targetPath = [macTrashDiretory stringByAppendingFormat:@"/%@%@.%@", fileName, dateStr, fileType];
+     NSString *filePath = [NSFileManager ml_filePathWithDiretory:diretory fileName:fileName fileType:fileType];
+    BOOL res =[[NSFileManager defaultManager] moveItemAtPath:filePath toPath:targetPath error:nil];
+    
+    return res;
+    
+}
++ (NSString *)ml_filePathWithDiretory:(NSString *)diretory fileName:(NSString *)fileName fileType:(NSString *)fileType {
+    NSString *filePath;
+    if ([diretory hasSuffix:@"/"]) {
+        filePath  = [diretory stringByAppendingFormat:@"%@.%@",fileName, fileType];
+    } else {
+        filePath = [diretory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@",fileName, fileType]];
+    }
+    return filePath;
 }
 - (NSString *)_ml_currentTimerSting {
     NSTimeZone* timeZone = [NSTimeZone timeZoneWithName:@"Asia/Shanghai"];

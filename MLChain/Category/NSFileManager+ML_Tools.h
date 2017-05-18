@@ -21,8 +21,14 @@ typedef NS_OPTIONS(NSUInteger, MLFileOperationType) {
                        fileName:(NSString *)fileName
                            fileType:(NSString *)fileType
       operationType:(MLFileOperationType)operationType;
-- (void)clearFileContenWithDiretory:(NSString *)diretory
+- (void)clearFileContentWithDiretory:(NSString *)diretory
                             fileName:(NSString *)fileName
                             fileType:(NSString *)fileType;
+- (BOOL)deleteFileWithDiretory:(NSString *)diretory
+                            fileName:(NSString *)fileName
+                            fileType:(NSString *)fileType;
+- (NSString *)ml_filePathWithDiretory:(NSString *)diretory
+                          fileName:(NSString *)fileName
+                          fileType:(NSString *)fileType;
 
 @end

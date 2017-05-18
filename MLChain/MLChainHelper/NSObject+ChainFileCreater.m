@@ -93,7 +93,8 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
 + (void)mlc_chainCreateChainFileToPodsWithClassNames:(NSArray *)classNames {
     NSAssert(TARGET_IPHONE_SIMULATOR, @"在模拟器下才能使用该方法");
     [self mlc_clearChainFileContainerContent];
-    [self mlc_clearBackupDesktopChainFileContainerContent];
+    [self mlc_deleteBackupDesktopChainFileContainer];
+    
     [self mlc_chainCreateChainFileWithClassNames:classNames superClassTogether:YES saveType:MLChainFileSaveTypeToPods];
 }
 
@@ -716,16 +717,20 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
 
 #pragma mark - ChainFileContainerDiretory
 /**
- 清楚链式文件容器中的文本内容
+ 清除链式文件容器中的文本内容
  */
 + (void)mlc_clearChainFileContainerContent {
-    [[NSFileManager defaultManager] clearFileContenWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h];
-     [[NSFileManager defaultManager] clearFileContenWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m];
+    [[NSFileManager defaultManager] clearFileContentWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h];
+     [[NSFileManager defaultManager] clearFileContentWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m];
 }
-+ (void)mlc_clearBackupDesktopChainFileContainerContent {
+
+/**
+ 删除原
+ */
++ (void)mlc_deleteBackupDesktopChainFileContainer {
     NSString *XcodeCreateCodeDirectory = [[NSFileManager macDeskTopDiretory] stringByAppendingPathComponent:@"MLChain"];
-    [[NSFileManager defaultManager] clearFileContenWithDiretory:XcodeCreateCodeDirectory fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h];
-    [[NSFileManager defaultManager] clearFileContenWithDiretory:XcodeCreateCodeDirectory  fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m];
+    [[NSFileManager defaultManager] deleteFileWithDiretory:XcodeCreateCodeDirectory fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h];
+    [[NSFileManager defaultManager] deleteFileWithDiretory:XcodeCreateCodeDirectory  fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m];
 }
 + (NSString *)mlc_destinedChainFileContainerDiretory {
 
