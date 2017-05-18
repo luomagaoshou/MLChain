@@ -84,13 +84,15 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
 
 @implementation NSObject (ChainFileCreater)
 
-+ (void)mlc_chainCreateChainFileToDesktopWithClassNames:(NSArray *)classNames
-{
++ (void)mlc_chainCreateChainFileToDesktopWithClassNames:(NSArray *)classNames {
+    NSAssert(TARGET_IPHONE_SIMULATOR, @"在模拟器下才能使用该方法");
     [self mlc_chainCreateChainFileWithClassNames:classNames superClassTogether:YES saveType:MLChainFileSaveTypeToDestop];
     
     
 }
 + (void)mlc_chainCreateChainFileToPodsWithClassNames:(NSArray *)classNames {
+    NSAssert(TARGET_IPHONE_SIMULATOR, @"在模拟器下才能使用该方法");
+    [self mlc_clearChainFileContainerContent];
     [self mlc_chainCreateChainFileWithClassNames:classNames superClassTogether:YES saveType:MLChainFileSaveTypeToPods];
 }
 
@@ -705,12 +707,24 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
     return [resultStrs componentsJoinedByString:@"\n"];
     
 }
-#pragma mark - 
+
+#pragma mark - ChainFileContainerDiretory
+/**
+ 清楚链式文件容器中的文本内容
+ */
++ (void)mlc_clearChainFileContainerContent {
+    [[NSFileManager defaultManager] clearFileContenWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_h];
+     [[NSFileManager defaultManager] clearFileContenWithDiretory:[self mlc_destinedChainFileContainerDiretory] fileName:@"MLChainContainer" fileType:kML_CreateCodeFileType_m];
+}
 + (NSString *)mlc_destinedChainFileContainerDiretory {
+
     static NSString *chainFileContainer = nil;;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-         chainFileContainer = [[NSBundle mainBundle].infoDictionary[@"ProjectDiretory"] stringByAppendingString:@"/Pods/MLChain/MLChain/"];
+        //  @"ProjectDirectory" : $(SRCROOT)
+        NSAssert([NSBundle mainBundle].infoDictionary[@"ProjectDirectory"], @"必须在info.plist设置项目的地址");
+        
+         chainFileContainer = [[NSBundle mainBundle].infoDictionary[@"ProjectDirectory"] stringByAppendingString:@"/Pods/MLChain/MLChain/"];
     });
     return chainFileContainer;
 }

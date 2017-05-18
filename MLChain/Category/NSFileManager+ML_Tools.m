@@ -41,9 +41,7 @@
     NSString *filePath;
     if ([diretory hasSuffix:@"/"]) {
         filePath  = [diretory stringByAppendingFormat:@"%@.%@",fileName, fileType];
-    }
-    else
-    {
+    } else {
         filePath = [diretory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@",fileName, fileType]];
     }
     
@@ -82,7 +80,7 @@
                     
                 }
             } else if (operationType == MLFileOperationTypeFileByAppending) {
-                NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingAtPath:filePath];
+                NSFileHandle *fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:filePath];
                 [fileHandle seekToEndOfFile];
                 NSData *buffer = [fileString dataUsingEncoding:NSUTF8StringEncoding];
                 [fileHandle writeData:buffer];
@@ -110,7 +108,19 @@
     return NO;
 }
 
+- (void)clearFileContenWithDiretory:(NSString *)diretory
+                            fileName:(NSString *)fileName
+                            fileType:(NSString *)fileType {
+    NSString *filePath;
+    if ([diretory hasSuffix:@"/"]) {
+        filePath  = [diretory stringByAppendingFormat:@"%@.%@",fileName, fileType];
+    } else {
+        filePath = [diretory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@",fileName, fileType]];
+    }
+    [@"" writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
+
+}
 - (NSString *)_ml_currentTimerSting {
     NSTimeZone* timeZone = [NSTimeZone timeZoneWithName:@"Asia/Shanghai"];
     NSDateFormatter* formatter = [[NSDateFormatter alloc] init];

@@ -21,5 +21,8 @@ typedef NS_ENUM(NSUInteger, MLFileOperationType) {
                        fileName:(NSString *)fileName
                            fileType:(NSString *)fileType
       operationType:(MLFileOperationType)operationType;
+- (void)clearFileContenWithDiretory:(NSString *)diretory
+                            fileName:(NSString *)fileName
+                            fileType:(NSString *)fileType;
 
 @end
