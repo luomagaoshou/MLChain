@@ -650,9 +650,15 @@ typedef NS_ENUM(NSUInteger, MLChainFileSaveType) {
         
     }
     NSMutableArray *mutArr = [[NSMutableArray alloc] initWithArray:mutClassSet.allObjects];
-    [mutArr sortUsingComparator:^NSComparisonResult(NSString * className1, NSString * className2) {
-        return [NSClassFromString(className1) isSubclassOfClass:NSClassFromString(className2)];
-    }];
+    for (NSInteger i = 0; i < mutArr.count; i++) {
+        for (NSInteger j = i + 1; j < mutArr.count; j++) {
+            Class class1 = NSClassFromString(mutArr[i]);
+            Class class2 = NSClassFromString(mutArr[j]);
+            if ([class1 isSubclassOfClass:class2]) {
+                [mutArr exchangeObjectAtIndex:i withObjectAtIndex:j];
+            }
+        }
+    }
     return mutArr;
 }
 #pragma mark - File Content Helper
